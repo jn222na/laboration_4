@@ -5,31 +5,34 @@
     
     private $username = "Admin";
     private $password = "Password";
-    
+    private $regex = "/^[\ws*åäöÅÄÖ][^0-9]/";
+	private $rep;
     public function __construct(){
-        
+        $this->rep = new Repository();
     }
 	
 	
-	public function registerNewMember($newUsername,$newPassword){
-		if($newUsername != "" || $newPassword != ""){
-    	return TRUE;
-		}
-		else{
+	public function registerNewMember($newUsername,$newPassword,$repeatPassword){
+		
+			 if (preg_match($this->regex, $newUsername)) {
+			 	if($newPassword == $repeatPassword){
+			  	 return TRUE;
+			  }
+			 }
+			 else{
 			return FALSE;
-		}
-    }
-	
+			 }
+			}
+
+			
     //Lyckad inloggning sätt sessionen till webbläsaren användaren loggade in i
     	public function checkLogin($username, $password) {
-	       if($this->username == $username && $this->password == $password){
-	           $_SESSION['login'] = $username;
-	           $_SESSION["checkBrowser"] = $_SERVER['HTTP_USER_AGENT'];
-	           return TRUE;
-	       } 
-	       else{
-	       return FALSE;
-	       }
+    		if($this->rep->fetchCredentials()){
+			  $_SESSION['login'] = $username;
+	           $_SESSION["checkBrowser"] = $_SERVER['HTTP_USER_AGENT']; 
+			      return true;
+			}
+			 
 	}
        
         public function destroySession(){

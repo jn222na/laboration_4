@@ -7,16 +7,21 @@ class viewHTML {
 	private $usrValue = '';
 	private $newUsrValue = '';
 	private $password = '';
-	private $msg = '';
+	private $viewErrorMsg = '';
+	private $contrlErrorMsg = '';
 	private $model;
-
+	private $repository;
+	private $dat;
+	private $regex = "/^[\ws*åäöÅÄÖ][^0-9]/";
 	//TODO: FIXA
 	public function __construct(modelLogin $model) {
 		$this -> model = $model;
+		$this -> repository = new Repository();
 	}
 
 	public function echoHTML($msg) {
 		$ret = "";
+		
 		//Clock function
 		/*
 		 * nl2br allows \n within variable
@@ -24,8 +29,8 @@ class viewHTML {
 		 */
 		date_default_timezone_set('Europe/Stockholm');
 		$dag = utf8_encode("%Aen");
-		$dat = nl2br(ucwords(strftime($dag . " den %d %B.\n " . "År" . " %Y.\n Klockan " . "Är" . " %X.")));
-
+		$this -> dat = $dat = nl2br(ucwords(strftime($dag . " den %d %B.\n " . "År" . " %Y.\n Klockan " . "Är" . " %X.")));
+		$this -> contrlErrorMsg = $msg;
 		//Om inloggningen lyckades
 		if ($this -> model -> loginStatus()) {
 			$ret = "
@@ -35,17 +40,57 @@ class viewHTML {
 			<h2>
 				Admin Inloggad!
 			</h2>
-			$msg
-			$this->msg
+			$this->contrlErrorMsg
+			$this->viewErrorMsg
 			<form  method='post'> 
 		    	<input type='submit'  name='logOut' value='Logga ut'/>
 			</form>
 			" . $dat . "
         ";
+		} else {
+			$ret = $this -> loginEcho();
 		}
+
+		if ($this -> didUserPressNewMember()) {
+			return $this -> newMemberEcho();
+		}
+
+		return $ret;
+	}
+
+	public function loginEcho() {
+		$ret = "
+        <h1>
+			Laboration_2
+		</h1>
+		<a href='?register'>Register</a>
+		<h2>
+				Ej inloggad
+		</h2>
+	<h3>$this->contrlErrorMsg</h3>
+    <h3>$this->viewErrorMsg</h3> 
+       <form id='login'   method='post'>
+    		<label for='username'>Username:</label>
+    			<br>
+    		<input type='text'  name='username' value='$this->usrValue' id='username'>
+    			<br>
+    		<label for='password'>Password:</label>
+    			<br>
+    		<input type='password'   name='password' id='password'>
+    			<br>
+    		<input type='checkbox' name='checkSave' value='remember'>Remember me
+    			<br>
+    		<input type='submit'  name='submit'  value='Submit'/>
+	    </form>  
+		 <div>
+		 <p>$this->dat <br> </p>
 		
-			if ($this -> didUserPressNewMember()) {
-					$ret = "
+		 </div>";
+		return $ret;
+	}
+
+	public function newMemberEcho() {
+		$ret = "
 			<h1>
 				Laboration_4
 			</h1>
@@ -54,8 +99,8 @@ class viewHTML {
 				Ej inloggad, Registrera ny Medlem
 			</h2>
 			<h3>
-			$msg
-			$this->msg
+			$this->contrlErrorMsg
+			$this->viewErrorMsg
 			</h3>
 			<form  method='post'> 
 				<label for='newUsername'>Username:</label>
@@ -73,49 +118,10 @@ class viewHTML {
     			<br>
     		<input type='submit'  name='register' value='Register'/>
 			</form>
-			" . $dat . "
+			" . $this -> dat . "
 	";
-	
-		}
-		
-		//Om inloggningen misslyckades
-		else {
-			$ret = "
-        <h1>
-			Laboration_2
-		</h1>
-		<a href='?register'>Register</a>
-		<h2>
-				Ej inloggad
-		</h2>
-	<h3>$msg</h3>
-    <h3>$this->msg</h3> 
-       <form id='login'   method='post'>
-    		<label for='username'>Username:</label>
-    			<br>
-    		<input type='text'  name='username' value='$this->usrValue' id='username'>
-    			<br>
-    		<label for='password'>Password:</label>
-    			<br>
-    		<input type='password'   name='password' id='password'>
-    			<br>
-    		<input type='checkbox' name='checkSave' value='remember'>Remember me
-    			<br>
-    		<input type='submit'  name='submit'  value='Submit'/>
-	    </form>  
-		 <div>
-		 <p>$dat <br> </p>
-		
-		 </div>";
-
-		}
-	
-		
-		
 		return $ret;
 	}
-	
-
 
 	//Sätter kakor och krypterar lösenord
 	public function rememberUser() {
@@ -141,39 +147,53 @@ class viewHTML {
 		setcookie('cookiePassword', "", time() - 3600);
 	}
 
+
+	public function setUsrValueOnSuccess(){
+		setcookie('cookieNewUsername',$this->getNewUsername(), time() + 60 * 60 * 24 * 30);
+				// $this->usrValue = $_COOKIE['cookieNewUsername'];
+		// header('location: ?');
+		// exit;
+							
+	}
+			
 	public function didUserPressRegisterMember() {
+		
 		$newUsername = $this -> getNewUsername();
 		$newPassword = $this -> getNewPassword();
-		$repeatPassword = $this->getRepeatPassword();
-		
+		$repeatPassword = $this -> getRepeatPassword();
+
 		if (isset($_POST['register'])) {
 			if ($newUsername == "") {
 				$this -> newUsrValue = $newUsername;
 				$this -> msg = "Username is missing.";
-			}
-			else if(strlen($newUsername) < 3){
+			} else if (strlen($newUsername) < 3 || strlen($newUsername) > 15) {
 				$this -> newUsrValue = $newUsername;
-				$this->msg = "Username must contain more than 3 characters";
-			}
-			else if($newPassword == ""){
+				$this -> viewErrorMsg = "Username must contain more than 3 characters and less than 15";
+			} else if (!preg_match($this->regex, $newUsername)) {
+				$newUsername =  strip_tags($newUsername);
+				$newUsername = trim(preg_replace('/[^a-zA-Z\d]/', '', $newUsername));
 				$this -> newUsrValue = $newUsername;
-				$this->msg  = "Password is missing";
-			}
-			else if(strlen($newPassword) < 6){
+				$this->viewErrorMsg = "Contains non char/numeric characters";
+			} else if ($newPassword == "") {
 				$this -> newUsrValue = $newUsername;
-				$this->msg  = "Password must contain more than 6 characters";
-			}
-			else if($newUsername == "" && $newPassword == ""){
+				$this -> viewErrorMsg = "Password is missing";
+			} else if (strlen($newPassword) < 6) {
 				$this -> newUsrValue = $newUsername;
-				$this->msg = "Username and password missing";
-			}
-			else if($newPassword != $repeatPassword){
+				$this -> viewErrorMsg = "Password must contain more than 6 characters";
+			} else if ($newUsername == "" && $newPassword == "") {
 				$this -> newUsrValue = $newUsername;
-				$this->msg = "Passwords doesn't match";
+				$this -> viewErrorMsg = "Username and password missing";
+			} else if ($newPassword != $repeatPassword) {
+				$this -> newUsrValue = $newUsername;
+				$this -> viewErrorMsg = "Passwords doesn't match";
+			} else if (!$this -> repository -> addUser()) {
+				$this -> newUsrValue = $newUsername;
+				$this -> viewErrorMsg = "User already exists.";
 			}
+			$_SESSION['newUsername'] = $this->getNewUsername();
 			return TRUE;
 		}
-		
+
 		return FALSE;
 
 	}
@@ -187,14 +207,10 @@ class viewHTML {
 			if ($username == "") {
 				$this -> usrValue = $username;
 				$this -> msg = "Username is missing.";
-			}
-
-			else if ($password == "" && $username != "") {
+			} else if ($password == "" && $username != "") {
 				$this -> msg = "Password is empty.";
 				$this -> usrValue = $username;
-			}
-
-			else if ($username != "" && $password != "Password") {
+			} else if ($username != "" && $password != "Password") {
 				$this -> usrValue = $username;
 
 			}
@@ -220,7 +236,7 @@ class viewHTML {
 		}
 	}
 
-		//Get funktioner --------------------------
+	//Get funktioner --------------------------
 	public function getUsername() {
 		if (isset($_POST['username'])) {
 			return $_POST['username'];
@@ -268,7 +284,6 @@ class viewHTML {
 	}
 
 	// Get funktioner slut ---------------------
-	
 
 }
 

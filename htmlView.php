@@ -1,7 +1,8 @@
 <?php
 
     class htmlView{
-        
+        //ApplicationContent $content
+        //\view\NavigationView::getMenu();
         public function echoHtml($body){
             echo "
 				<!DOCTYPE html>

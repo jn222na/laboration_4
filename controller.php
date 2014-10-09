@@ -18,8 +18,11 @@ require_once 'Repository.php';
               $password = $this->view->getPassword();
 			  $newUsername = $this->view->getNewUsername();
 			  $newPassword = $this->view->getNewPassword();
+			  $repeatPassword = $this->view->getRepeatPassword();
               $msg = "";
               
+			 
+			  
     //Om sessionen inte är satt 
             if($this->model->loginStatus() == FALSE){
     // kolla om cookies är satta
@@ -60,10 +63,15 @@ require_once 'Repository.php';
               
  				if($this->view->didUserPressNewMember()){
                		if($this->view->didUserPressRegisterMember()){
-               			$this->model->registerNewMember($newUsername,$newPassword);
-							$this->dbActions->addUser();
+               			if($this->model->registerNewMember($newUsername,$newPassword,$repeatPassword)){
+							if(!$this->dbActions->addUser()){
+								echo "addusertrue";
+									$this->view->setUsrValueOnSuccess();
+									
+							}
                		}
                }
+				}
               
     //Skickar med meddelandet till echoHTML
               return $this->view->echoHTML($msg);
