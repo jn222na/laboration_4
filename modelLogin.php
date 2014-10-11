@@ -5,24 +5,13 @@
     
     private $username = "Admin";
     private $password = "Password";
-    private $regex = "/^[\ws*åäöÅÄÖ][^0-9]/";
+    private $regex = '/[^A-Za-zåäöÅÄÖ0-9\-_\.]/i';
 	private $rep;
     public function __construct(){
         $this->rep = new Repository();
     }
 	
-	
-	public function registerNewMember($newUsername,$newPassword,$repeatPassword){
-		
-			 if (preg_match($this->regex, $newUsername)) {
-			 	if($newPassword == $repeatPassword){
-			  	 return TRUE;
-			  }
-			 }
-			 else{
-			return FALSE;
-			 }
-			}
+
 
 			
     //Lyckad inloggning sätt sessionen till webbläsaren användaren loggade in i

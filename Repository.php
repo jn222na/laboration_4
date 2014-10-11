@@ -29,27 +29,40 @@ class Repository {
 	public function addUser() {
 		$username = $_POST['newUsername'];
 		$password = $_POST['newPassword'];
-		$this -> connection();
-		$sql = "INSERT INTO members(" . self::$rowUsername . ", " . self::$rowPassword . ") VALUES (?, ?)";
-		
-	//Kollar om namnet redan finns 
-		$sthandler = $this -> dbConnection -> prepare("SELECT username FROM members WHERE username = ? LIMIT 1");
-		$sthandler->bindParam('1', $username,PDO::PARAM_STR);
-		$sthandler -> execute();
-		if ($sthandler -> rowCount() > 0) {
-			return false;
-		} else {
-			$params = array($username, $password);
+		try{
+    		$this -> connection();
+    		$sql = "INSERT INTO members(" . self::$rowUsername . ", " . self::$rowPassword . ") VALUES (?, ?)";
+	    //Kollar om namnet redan finns 
+        	$sqlDuplicate = "SELECT * FROM members WHERE " . self::$rowUsername . " = ?";
+
+			$paramsDuplicate = array($username);
+
+			$queryDuplicate = $this->dbConnection->prepare($sqlDuplicate);
+
+			$queryDuplicate->execute($paramsDuplicate);
+
+			$result = $queryDuplicate->fetch();
+
+			if (strtolower($result[self::$rowUsername]) === strtolower($username)) {
+				return false;
+			}
+		//Annars lägg till användare
+			else{
+			    $params = array($username, $password);
 			$query = $this -> dbConnection -> prepare($sql);
 			$query -> execute($params);
-			return TRUE;
-		}
-	
-		
+			return true;
+			}
+
+		} catch (\Exception $e) {
+			die("An error occured in the database! addUser");
+	    }
 	}
-	public function fetchCredentials()
-	{
+	
+	
+	public function fetchCredentials(){
 		if(isset($_POST['username'], $_POST['password'])){
+	try{	    
 		$this->connection();
         $query = $this -> dbConnection -> prepare("SELECT username, password FROM members WHERE username=:username AND password=:password");
 		$query->bindParam(':username', $_POST['username'], PDO::PARAM_STR);
@@ -63,8 +76,10 @@ class Repository {
         }
 		return true;
     }
-		
+    catch(\Exception $e){
+		   die("An error occured in the database! fetchCredentials");
+		}
+		}
 	}
 
 }
-

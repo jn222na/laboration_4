@@ -60,18 +60,20 @@ require_once 'Repository.php';
                   $msg =  "User logged out";
               }
               
-              
- 				if($this->view->didUserPressNewMember()){
+    //registrera        
+                
+ 				 if($this->view->didUserPressNewMember()){
+ 				     $this->view->setNewUsernameCookie();
                		if($this->view->didUserPressRegisterMember()){
-               			if($this->model->registerNewMember($newUsername,$newPassword,$repeatPassword)){
-							if(!$this->dbActions->addUser()){
-								echo "addusertrue";
-									$this->view->setUsrValueOnSuccess();
-									
+                     if($this->dbActions->addUser()){
+							    header("Location: ?");
 							}
-               		}
+							else{
+							 $this->view->checkExistingMember();
+							}
                }
-				}
+			}
+                
               
     //Skickar med meddelandet till echoHTML
               return $this->view->echoHTML($msg);
