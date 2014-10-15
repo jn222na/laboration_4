@@ -214,19 +214,18 @@ class viewHTML {
 				$this -> newUsrValue = $newUsername;
 				$this -> viewErrorMsg = "Passwords doesn't match";
 					return FALSE;
-			} 
-// 			else if ($this -> repository -> addUser()) {
-// 				$this -> viewErrorMsg = "User already exists.";
-// 					return FALSE;
-// 			}
+			}
+			
+		}
 			return TRUE;
 		}
-
-	}
+	
 		
 	public function checkExistingMember(){
-			
+	   
+			if($this -> getNewUsername() != "" && $this -> getNewPassword() != ""){
 				$this -> viewErrorMsg = "User already exists.";
+			}
 			
 		}
 

@@ -83,3 +83,14 @@ class Repository {
 	}
 
 }
+
+// 	public function ifUserExists(){
+// 	    $query = $this -> dbConnection -> prepare("SELECT username, password FROM members WHERE username=:username");
+// 	    if($this->fetchCredentials){
+// 	        return true;
+// 	    }
+// 	    else{
+// 	        return false;
+// 	    }
+// 	}
+

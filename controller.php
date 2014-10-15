@@ -69,8 +69,9 @@ require_once 'Repository.php';
 							    header("Location: ?");
 							}
 							else{
-							 $this->view->checkExistingMember();
+							     $this->view->checkExistingMember();
 							}
+							
                }
 			}
                 
