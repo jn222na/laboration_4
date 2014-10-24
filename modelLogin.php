@@ -16,7 +16,7 @@
 			
     //Lyckad inloggning sätt sessionen till webbläsaren användaren loggade in i
     	public function checkLogin($username, $password) {
-    		if($this->rep->fetchCredentials()){
+    		if($this->rep->fetchCredentials($username,$password)){
 			  $_SESSION['login'] = $username;
 	           $_SESSION["checkBrowser"] = $_SERVER['HTTP_USER_AGENT']; 
 			      return true;

@@ -10,9 +10,9 @@ class Repository {
 	private $model;
 	private $db;
 	protected $dbConnection;
-	protected $dbTable;
-	 private static $rowUsername = "username";
- 	 private static $rowPassword = "password";
+	private $dbTable = "members";
+	 private $rowUsername = "username";
+ 	 private $rowPassword = "password";
 	public function connection() {
 		if ($this -> dbConnection == NULL) {
 			$this -> dbConnection = new \PDO(\settings::$DB_CONNECTION, \settings::$DB_USERNAME, \settings::$DB_PASSWORD);
@@ -26,14 +26,13 @@ class Repository {
 		
 	}
 
-	public function addUser() {
-		$username = $_POST['newUsername'];
-		$password = $_POST['newPassword'];
+	public function addUser($username,$password) {
 		try{
     		$this -> connection();
-    		$sql = "INSERT INTO members(" . self::$rowUsername . ", " . self::$rowPassword . ") VALUES (?, ?)";
-	    //Kollar om namnet redan finns 
-        	$sqlDuplicate = "SELECT * FROM members WHERE " . self::$rowUsername . " = ?";
+    		$sql = "INSERT INTO ".$this->dbTable."(" . $this->rowUsername . ", " . $this->rowPassword . ") VALUES (?, ?)";
+    		
+	      //Kollar om namnet redan finns 
+        	$sqlDuplicate = "SELECT * FROM ".$this->dbTable."  WHERE " . $this->rowUsername . " = ?";
 
 			$paramsDuplicate = array($username);
 
@@ -43,7 +42,7 @@ class Repository {
 
 			$result = $queryDuplicate->fetch();
 
-			if (strtolower($result[self::$rowUsername]) === strtolower($username)) {
+			if (strtolower($result[$this->rowUsername]) === strtolower($username)) {
 				return false;
 			}
 		//Annars lägg till användare
@@ -60,13 +59,14 @@ class Repository {
 	}
 	
 	
-	public function fetchCredentials(){
-		if(isset($_POST['username'], $_POST['password'])){
+	public function fetchCredentials($username,$password){
+		if(isset($username,$password)){
 	try{	    
 		$this->connection();
-        $query = $this -> dbConnection -> prepare("SELECT username, password FROM members WHERE username=:username AND password=:password");
-		$query->bindParam(':username', $_POST['username'], PDO::PARAM_STR);
-        $query->bindParam(':password', $_POST['password'], PDO::PARAM_STR);
+        $query = $this -> dbConnection -> prepare
+        ("SELECT " . $this->rowUsername . ", password FROM ".$this->dbTable." WHERE " . $this->rowUsername . "=:" . $this->rowUsername . " AND " . $this->rowPassword . "=:" . $this->rowPassword . "");
+		$query->bindParam(':' . $this->rowUsername . '', $username, PDO::PARAM_STR);
+        $query->bindParam(':' . $this->rowPassword . '', $password, PDO::PARAM_STR);
 		
 		$query->execute();
 		 $user_id = $query->fetchColumn();
@@ -83,14 +83,4 @@ class Repository {
 	}
 
 }
-
-// 	public function ifUserExists(){
-// 	    $query = $this -> dbConnection -> prepare("SELECT username, password FROM members WHERE username=:username");
-// 	    if($this->fetchCredentials){
-// 	        return true;
-// 	    }
-// 	    else{
-// 	        return false;
-// 	    }
-// 	}
 

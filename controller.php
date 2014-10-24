@@ -65,7 +65,7 @@ require_once 'Repository.php';
  				 if($this->view->didUserPressNewMember()){
  				     $this->view->setNewUsernameCookie();
                		if($this->view->didUserPressRegisterMember()){
-                     if($this->dbActions->addUser()){
+                     if($this->dbActions->addUser($newUsername,$newPassword)){
 							    header("Location: ?");
 							}
 							else{
